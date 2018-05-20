@@ -1,34 +1,14 @@
-local player = class("player")
+local player = class("player",Base)
 Player = player
-player.hp = 100
-player.speed = 200
+player.hp = 30
+player.speed = 50
 player.endurance = 100
 player.endurance_lose = 20
 player.scale = 20
-
-function player:init(x,y)
-    self.x = x - player.scale/2
-    self.y = y - player.scale/2
-    self.cx = x
-    self.cy = y
-    self.rot = 0
-    self.scale = player.scale
-    self.endurance = player.endurance
-    self.hp = player.hp
-    self.speed = player.speed
-    self.endurance_lose = player.endurance_lose
-   
-    self.dx = 0
-    self.dy = 0
-    self:initColl()
-    self:setLight()
-    self:initSound()
-end
-
+player.player = true
 function player:update(dt)
+    Base.update(self,dt)
     self:setDirection()
-    if self.light then self.light:update(dt) end
-    self.sounder:update(dt)
     self:control(dt)
     self:enduranceUpdate(dt)
     game.cam:followTarget(self,10)
@@ -36,33 +16,12 @@ end
 
 function player:draw()
    love.graphics.setColor(150,150,255,255)
-   love.graphics.rectangle("line",self.x,self.y,self.scale,self.scale)
+   love.graphics.rectangle("line",self.x + self.scale/4,self.y + self.scale/4,self.scale/2,self.scale/2)
    love.graphics.setColor(150,150,255,200)
-   love.graphics.rectangle("fill",self.x,self.y,self.scale,self.scale)
+   love.graphics.rectangle("fill",self.x + self.scale/4,self.y + self.scale/4,self.scale/2,self.scale/2)
    if not self.light then
     self.sounder:draw()
    end
-end
-
--- candle(default)/lamp/flashlight/torch/
-function player:setLight(t)
-    if self.light then 
-        game.light_sys:remove(self.light.obj) 
-    end
-    if t == false then 
-        self.light = nil
-        return 
-    end
-    t = t or "candle"
-    self.light = LightSource(self,t)
-end
-
-function player:initColl()
-    game.coll_sys:add(self,self.cx ,self.cy,self.scale,self.scale)
-end
-
-function player:initSound()
-   self.sounder = Sounder(self) 
 end
 
 function player:control(dt)
@@ -146,35 +105,6 @@ function player:setDirection()
     local mx,my = game:getMouseWorldPos()
     local dir = math.getRot(mx,my,self.x,self.y)
     self.rot = dir + Pi/2
-end
-
-function player.collidefilter(me,other)
-	if other.isWall then
-		return bump.Response_Bounce
-	end
-end
-
-
-function player:collision(cols)
-	for i,col in ipairs(cols) do
-		local other = col.other
-		if other.isWall then
-			
-		end
-	end
-end
-
-function player:setPosition(x,y)
-    self.x = x
-    self.y = y
-    self.cx = self.x + self.scale/2
-    self.cy = self.y + self.scale/2
-end
-
-function player:translate(tx,ty)
-    local tx,ty ,cols = game.coll_sys:move(self,tx,ty,self.collidefilter)
-    self:collision(cols)
-	self:setPosition(tx,ty)
 end
 
 return player

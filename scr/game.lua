@@ -1,16 +1,19 @@
 local maze = require "scr/maze"
+require"scr/base"
 require"scr/player"
+require"scr/enemy"
 require"scr/lightSource"
 require"scr/sounder"
+require"scr/visual"
 game = {}
 
 function game:init()
     self.coll_sys = bump.newWorld(32)
     self.cam = camera.new(0,0,w()*32,h()*32)	
-    self.cam:setScale(1)
+    self.cam:setScale(3)
     self.light_sys = LightWorld({
    		ambient = {0,0,0},
-    	shadowBlur = 3.0
+    	shadowBlur = 1.0
  	})
 	self.light_sys:setCamera(self.cam)
     self.map = maze.init()
@@ -18,8 +21,11 @@ function game:init()
     self:generate_walls()
     
     self.player = Player(650,360)
+    self.enemies = {}
+    local enemy = Enemy(630,330)
+    table.insert(self.enemies,enemy)
 end
-
+    
 function game:update(dt)
     if input:test("1") == "pressed" then
         self.player:setLight("candle")
@@ -27,6 +33,10 @@ function game:update(dt)
         self.player:setLight("flashlight")
     elseif input:test("3") == "pressed" then
         self.player:setLight(false)
+    end
+    
+    for i , e in ipairs(self.enemies) do
+        e:update(dt)
     end
     self.player:update(dt)
     self.light_sys:update(dt)
@@ -41,13 +51,16 @@ function game:draw()
 		for i,wall in ipairs(self.walls) do
             love.graphics.rectangle("fill",wall.x,wall.y,wall.w,wall.h)
         end
-        --self.player:draw()
-        --maze.draw()
+        for i , e in ipairs(self.enemies) do
+            e:draw()
+        end
 	end)
     --love.graphics.setColor(1,1,1,1)
 	self.cam:draw(function()
         self.player:draw()
     end)
+    love.graphics.setColor(255,0,0,255)
+    love.graphics.print(love.timer.getFPS(),100,100)
 end
 
 function game:generate_walls()
